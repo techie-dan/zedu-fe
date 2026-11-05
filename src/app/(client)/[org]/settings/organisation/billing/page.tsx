@@ -1,16 +1,16 @@
 "use client";
-import React, { Suspense, useContext, useEffect } from "react";
+import React, { Suspense, useContext, useEffect, useRef } from "react";
 import SettingsLabel from "../../components/settings-label";
 import BillingHeader from "./components/billing-header";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
-import { useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import BillingPaymentHistoryTable from "./components/billing-payment-history-table";
 import axios from "axios";
 import { DataContext } from "~/store/GlobalState";
 import { useGetCurrentSubscription } from "~/utils/subscriptionPlans";
 import { ACTIONS } from "~/store/Actions";
 import { GetRequest } from "~/utils/new-request";
-import { showSuccess } from "~/components/toast/sonner";
+import { showError, showSuccess } from "~/components/toast/sonner";
 import { useRBAC } from "~/hooks/useRBAC";
 
 export const Client = () => {
@@ -19,22 +19,43 @@ export const Client = () => {
   const { orgSlug, orgData } = state;
   const searchParams = useSearchParams();
 
+  const pathname = usePathname();
   const sessionId = searchParams.get("session_id");
+  const completedSessionRef = useRef<string | null>(null);
 
-  //
+  // Stripe sends the user back here with ?session_id=... once checkout ends.
+  // Confirm the payment once per session, reload the organisation so the new
+  // plan shows straight away, then remove session_id from the address bar so a
+  // re-render or reload does not confirm the same payment again.
   useEffect(() => {
+    if (!sessionId || completedSessionRef.current === sessionId) return;
+    completedSessionRef.current = sessionId;
+
     const completePayment = async () => {
       const res = await GetRequest(
-        `/subscriptions/complete?session_id=${sessionId}`
+        `/subscriptions/complete?session_id=${encodeURIComponent(sessionId)}`
       );
-      if (res?.status === 200 || res?.status === 201) {
-        // router.push(`/${orgSlug}/settings/organisation/billing`)
+      if (res?.status !== 200 && res?.status !== 201) {
+        showError(
+          "We could not confirm your payment. Please refresh to retry."
+        );
+        completedSessionRef.current = null;
+        return;
       }
+
+      const orgId = state?.orgId || localStorage.getItem("orgId") || "";
+      if (orgId) {
+        const orgRes = await GetRequest(`/organisations/${orgId}`);
+        if (orgRes?.status === 200 || orgRes?.status === 201) {
+          dispatch({ type: ACTIONS.ORG_DATA, payload: orgRes.data.data });
+        }
+      }
+
+      router.replace(pathname);
     };
 
-    if (sessionId) {
-      completePayment();
-    }
+    completePayment();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionId]);
 
   const [creditTransactions, setCreditTransactions] = React.useState([]);
