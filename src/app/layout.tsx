@@ -9,6 +9,7 @@ import Script from "next/script";
 import ClientLayout from "./client-layout";
 import { gtmScriptUrl, ogImageUrl, siteUrl } from "~/lib/env-urls";
 import { ThemeProvider } from "~/components/theme/theme-provider";
+import { CookieConsentBanner } from "~/app/(homepage)/_components/cookie-consent/Banner";
 
 export const metadata: Metadata = {
   title: "Zedu — Structured Learning for Bootcamps & Schools",
@@ -52,7 +53,11 @@ export default function RootLayout({
   // the page itself as a script, so analytics is only added when configured.
   const gaId = process.env.NEXT_PUBLIC_GA_ID;
   const gtmUrl = gtmScriptUrl();
-  const analyticsEnabled = Boolean(gaId && gtmUrl);
+  const hasAnalyticsConfig = Boolean(gaId && gtmUrl);
+
+  // Check if analytics consent has been given via localStorage
+  const hasConsent = typeof window !== "undefined" && localStorage.getItem("cookie_consent") === "true";
+  const analyticsEnabled = hasAnalyticsConfig && hasConsent;
 
   return (
     <html
@@ -87,6 +92,7 @@ export default function RootLayout({
             <DataProvider>{children}</DataProvider>
           </ClientLayout>
         </ThemeProvider>
+        <CookieConsentBanner />
       </body>
     </html>
   );
