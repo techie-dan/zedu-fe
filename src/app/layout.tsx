@@ -4,7 +4,6 @@ import "./globals.css";
 import "./responsive.css";
 import "react-loading-skeleton/dist/skeleton.css";
 import { DataProvider } from "~/store/GlobalState";
-import Script from "next/script";
 import { gtmScriptUrl } from "~/lib/env-urls";
 import { ThemeProvider } from "~/components/theme/theme-provider";
 import {
@@ -26,11 +25,6 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   const gaId = process.env.NEXT_PUBLIC_GA_ID;
   const gtmUrl = gtmScriptUrl();
-  const hasAnalyticsConfig = Boolean(gaId && gtmUrl);
-
-  // Check if analytics consent has been given via localStorage
-  const hasConsent = typeof window !== "undefined" && localStorage.getItem("cookie_consent") === "true";
-  const analyticsEnabled = hasAnalyticsConfig && hasConsent;
 
   return (
     <html
@@ -48,24 +42,6 @@ export default function RootLayout({
             ),
           }}
         />
-        {analyticsEnabled && (
-          <>
-            <Script async src={`${gtmUrl}?id=${gaId}`} />
-            <Script
-              id="google-analytics"
-              dangerouslySetInnerHTML={{
-                __html: `
-                  window.dataLayer = window.dataLayer || [];
-                  function gtag(){dataLayer.push(arguments);}
-                  gtag('js', new Date());
-                  gtag('config', '${gaId}', {
-                    page_path: window.location.pathname,
-                  });
-                `,
-              }}
-            />
-          </>
-        )}
       </head>
       <body className="max-w-screen overflow-x-hidden" suppressHydrationWarning>
         <ThemeProvider>
@@ -73,7 +49,7 @@ export default function RootLayout({
             <DataProvider>{children}</DataProvider>
           </ClientLayout>
         </ThemeProvider>
-        <CookieConsentBanner />
+        <CookieConsentBanner gaId={gaId} gtmUrl={gtmUrl} />
       </body>
     </html>
   );
