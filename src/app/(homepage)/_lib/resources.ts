@@ -10,7 +10,7 @@ export interface ResourceItem {
   title: string;
   description?: string;
   image: string;
-  link: string;
+  link?: string;
   duration?: string;
 }
 
@@ -94,7 +94,7 @@ export const resources: ResourceItem[] = [
     link: "/resources/cohort-communication-planner",
   },
   {
-    id: 11,
+    id: 12,
     tab: "guides",
     category: "Tools",
     title: "Shipped on Zedu",
@@ -120,7 +120,7 @@ export const resources: ResourceItem[] = [
     title: "Getting Started with Zedu for Universities",
     image: "/images/homepage/resources/webinar-1.png",
     duration: "45 min",
-    link: "#",
+    link: "",
   },
   {
     id: 7,
@@ -129,7 +129,7 @@ export const resources: ResourceItem[] = [
     title: "Running Bootcamp Cohorts on Zedu Platform",
     image: "/images/homepage/resources/webinar-2.png",
     duration: "60 min",
-    link: "#",
+    link: "",
   },
   {
     id: 8,
@@ -138,6 +138,6 @@ export const resources: ResourceItem[] = [
     title: "Using AI Assistants to Simplify Education",
     image: "/images/homepage/resources/webinar-3.png",
     duration: "30 min",
-    link: "#",
+    link: "",
   },
 ];

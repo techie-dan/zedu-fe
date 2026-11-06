@@ -143,6 +143,7 @@ export const ResourcesHub = () => {
                   <GuideResourceCard
                     key={`guide-${resource.id}-${index}`}
                     id={resource.id}
+                    category={resource.category}
                     title={resource.title}
                     description={resource?.description ?? " "}
                     image={resource.image}
